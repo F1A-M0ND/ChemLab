@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chem Lab — Acid-Base Reaction Master</title>
+<style>
+:root{--bg:#0c0e12;--panel:#14171d;--panel2:#1a1e26;--line:#252b35;--txt:#e8ecf2;--dim:#8b95a5;--dim2:#5d6674;
+--acc:#6ee7b7;--acc2:#38bdf8;--warn:#fbbf24;--bad:#f87171;--proton:#fbbf24;--electron:#38bdf8;--r:14px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{height:100vh;background:var(--bg);color:var(--txt);font-family:"Inter","Segoe UI","Noto Sans Thai",system-ui,sans-serif;font-size:15px;line-height:1.55;overflow:hidden;-webkit-tap-highlight-color:transparent}
+.chem{font-family:"Iowan Old Style",Palatino,Georgia,serif;letter-spacing:.3px}
+sub{font-size:.66em;vertical-align:-.25em}sup{font-size:.66em;vertical-align:.45em}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+.screen{position:absolute;inset:0;display:none;flex-direction:column}
+.screen.on{display:flex}
+.top{display:flex;align-items:center;gap:12px;padding:12px 20px;border-bottom:1px solid var(--line);flex:0 0 auto;flex-wrap:wrap}
+.brand{font-size:12.5px;letter-spacing:2.5px;color:var(--dim);text-transform:uppercase}
+.chip{font-size:11.5px;padding:3px 10px;border:1px solid var(--line);border-radius:99px;color:var(--dim)}
+.chip.live{color:var(--acc);border-color:rgba(110,231,183,.35)}
+.spacer{flex:1}
+.ghostbtn{font-size:13px;color:var(--dim);padding:6px 12px;border:1px solid var(--line);border-radius:9px;transition:.18s}
+.ghostbtn:hover{color:var(--txt);border-color:var(--dim2)}
+.stage{flex:1;display:flex;flex-direction:column;padding:16px 20px 0;overflow:auto}
+.hintline{font-size:12.5px;color:var(--dim2);margin-bottom:9px}
+.buildWrap{border:1px solid var(--line);border-radius:var(--r);background:var(--panel);padding:15px}
+.buildLabel{font-size:10.5px;letter-spacing:1.6px;color:var(--dim2);text-transform:uppercase;margin-bottom:9px;display:flex;gap:10px;align-items:center}
+#buildArea{display:flex;flex-wrap:wrap;align-items:center;gap:7px;min-height:72px}
+.chunk{position:relative;padding:7px 12px;border-radius:11px;background:var(--panel2);border:1px solid var(--line);font-size:22px;cursor:pointer;transition:.15s;user-select:none}
+.chunk:hover{border-color:var(--dim2)}
+.chunk.op{background:none;border-color:transparent;color:var(--dim);font-size:24px;padding:7px 3px}
+.chunk.open{border-color:var(--acc);background:rgba(110,231,183,.06)}
+.chunk.sel{border-color:var(--acc2);box-shadow:0 0 0 2px rgba(56,189,248,.18)}
+.chunk .st{color:var(--dim);font-size:.6em;margin-left:1px}
+.chunk .x{position:absolute;top:-7px;right:-7px;width:19px;height:19px;border-radius:50%;background:var(--bad);color:#160c0c;font-size:12px;line-height:19px;text-align:center;opacity:0;transition:.15s}
+.chunk:hover .x{opacity:1}
+.atom{display:inline-block;padding:0 1px;border-radius:5px}
+.atom.sel{background:rgba(56,189,248,.18);outline:1px solid rgba(56,189,248,.55)}
+.chg-p{color:var(--proton)}.chg-e{color:var(--electron)}
+.trays{display:grid;grid-template-columns:1fr 280px;gap:13px;margin:13px 0 16px}
+@media(max-width:900px){.trays{grid-template-columns:1fr}}
+.tray{border:1px solid var(--line);border-radius:var(--r);background:var(--panel);padding:12px 13px}
+.trayTitle{font-size:10px;letter-spacing:1.6px;color:var(--dim2);text-transform:uppercase;margin-bottom:8px}
+.row{display:flex;flex-wrap:wrap;gap:6px}
+.piece{padding:6px 12px;border:1px solid var(--line);border-radius:9px;background:var(--panel2);font-size:16px;cursor:pointer;transition:.14s;user-select:none}
+.piece:hover{border-color:var(--acc);transform:translateY(-1px)}
+.piece.num{min-width:36px;text-align:center;color:var(--dim)}
+.piece.op{color:var(--acc2)}
+.piece.grp{color:var(--warn)}
+.piece.ion{border-color:rgba(251,191,36,.32)}
+.piece.ion.e{border-color:rgba(56,189,248,.32)}
+.seg{display:flex;gap:5px;flex-wrap:wrap}
+.seg button{padding:6px 13px;border:1px solid var(--line);border-radius:9px;font-size:13.5px;color:var(--dim);transition:.14s}
+.seg button:hover{color:var(--txt)}
+.seg button.on{background:var(--acc);color:#07120d;border-color:var(--acc);font-weight:600}
+.mini{font-size:11.5px;color:var(--dim2);margin-top:7px;line-height:1.5}
+.actions{display:flex;gap:9px;align-items:center;flex-wrap:wrap;padding-bottom:16px}
+.primary{padding:10px 24px;border-radius:10px;background:var(--acc);color:#07120d;font-weight:600;transition:.16s}
+.primary:hover{filter:brightness(1.08)}
+.feedback{font-size:13.5px;color:var(--dim);flex:1;min-width:200px}
+.feedback.ok{color:var(--acc)}.feedback.no{color:var(--bad)}
+.hintbtn{font-size:12.5px;color:var(--acc2);border:1px dashed rgba(56,189,248,.35);padding:6px 12px;border-radius:9px}
+.hintbox{margin:0 0 14px;border-left:2px solid var(--acc2);background:rgba(56,189,248,.05);padding:9px 12px;border-radius:0 10px 10px 0;font-size:13.5px;color:var(--dim)}
+.sheet{position:absolute;left:0;right:0;bottom:0;z-index:50;background:var(--panel);border-top:1px solid var(--line);border-radius:18px 18px 0 0;padding:6px 20px 20px;transform:translateY(calc(100% - 44px));transition:transform .4s cubic-bezier(.4,0,.2,1);max-height:74%;overflow:auto}
+.sheet.open{transform:translateY(0)}
+.grab{width:42px;height:4px;border-radius:9px;background:var(--dim2);margin:6px auto 10px;cursor:pointer}
+.sheetHead{display:flex;align-items:center;gap:10px;cursor:pointer}
+.sheetHead b{font-size:14px}
+.qtext{font-size:14.5px;margin:9px 0 12px}
+.subline{display:flex;flex-wrap:wrap;gap:9px}
+.subcard{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:10px;padding:6px 10px;background:var(--panel2);font-size:15px}
+.ibtn{width:21px;height:21px;border-radius:50%;border:1px solid var(--dim2);color:var(--dim);font-size:11.5px;font-style:italic}
+.ibtn:hover{border-color:var(--acc2);color:var(--acc2)}
+.infoPanel{margin-top:10px;border:1px solid var(--line);border-left:2px solid var(--acc2);border-radius:10px;padding:10px 13px;background:var(--panel2);font-size:13px}
+.infoPanel table{border-collapse:collapse;width:100%}
+.infoPanel td{padding:3px 0;color:var(--dim)}
+.infoPanel td:last-child{color:var(--txt);text-align:right}
+#overlay{position:absolute;inset:0;z-index:70;background:rgba(8,10,13,.88);display:none;align-items:center;justify-content:center;padding:24px}
+#overlay.on{display:flex}
+.clearCard{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:26px 28px;max-width:560px;width:100%;text-align:center}
+.clearCard .eq{font-size:23px;margin:14px 0;padding:14px;background:var(--panel2);border-radius:12px}
+.teach{font-size:13.5px;color:var(--dim);border-left:2px solid var(--acc);padding-left:12px;text-align:left;margin:16px 0 20px}
+.ok-big{font-size:32px;color:var(--acc)}
+.btnrow{display:flex;gap:9px;justify-content:center;flex-wrap:wrap}
+
+#introWrap{position:absolute;inset:0;z-index:60;background:rgba(12,14,18,.95);display:flex;align-items:center;justify-content:center;gap:20px;pointer-events:none}
+.introCard{font-size:28px;padding:16px 24px;border:1px solid var(--line);border-radius:var(--r);background:var(--panel2);transition:all 0.8s cubic-bezier(.6,-.2,.3,1.3)}
+
+#toast{position:fixed;left:50%;bottom:80px;transform:translate(-50%,16px);z-index:95;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:9px 16px;font-size:13px;opacity:0;transition:.25s;pointer-events:none;max-width:86vw;text-align:center}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+
+<section id="screen-p1" class="screen on">
+  <div class="top">
+    <span class="brand">Chem Lab</span>
+    <span class="chip live" id="stageTag">Acid-Base Random Mode</span>
+    <span class="spacer"></span>
+    <button class="ghostbtn" id="btnRandomNew">สุ่มโจทย์กรด-เบสข้อใหม่</button>
+  </div>
+  <div class="stage">
+    <div class="hintline" id="topHint">ประกอบสมการกรด-เบสให้ถูกต้อง · โหมด Text Notation 100%</div>
+    <div class="buildWrap">
+      <div class="buildLabel"><span>Workspace</span><span id="selInfo" style="color:var(--acc2)"></span></div>
+      <div id="buildArea"></div>
+    </div>
+    <div class="trays">
+      <div class="tray">
+        <div class="trayTitle">Pieces · คลิกเพื่อวาง</div>
+        <div class="row" id="trayEl"></div><div style="height:8px"></div>
+        <div class="row" id="trayNum"></div><div style="height:8px"></div>
+        <div class="row" id="trayOp"></div>
+        <div class="mini">เลขหลังธาตุ = ตัวห้อย · เลขตอนยังไม่มีสาร = สัมประสิทธิ์ · แตะสารแล้วกดเลข = แก้สัมประสิทธิ์</div>
+      </div>
+      <div class="tray">
+        <div class="trayTitle">State &amp; Ion Tools</div>
+        <div class="seg" id="segState"></div>
+        <div style="height:10px"></div>
+        <div class="row" id="trayIon"></div>
+        <div class="seg" id="segIon" style="margin-top:6px"></div>
+        <div class="mini">เลือกอะตอมแล้วกด p⁺ / e⁻ เพื่อปรับแต่งประจุไอออน</div>
+      </div>
+    </div>
+    <div id="p1hint"></div>
+    <div class="actions">
+      <button class="primary" id="btnCheck">ตรวจสมการ</button>
+      <button class="ghostbtn" id="btnBack">⌫ ลบชิ้นล่าสุด</button>
+      <button class="ghostbtn" id="btnReset">เริ่มข้อนี้ใหม่</button>
+      <button class="hintbtn" id="btnP1Hint">เปิด hint</button>
+      <span class="feedback" id="fb"></span>
+    </div>
+  </div>
+  <div id="introWrap"></div>
+  <div class="sheet" id="sheet1">
+    <div class="grab" id="grab1"></div>
+    <div class="sheetHead" id="head1"><b>โจทย์กรด-เบส</b><span class="chip">แตะเพื่อเปิด/ปิด</span></div>
+    <div class="qtext" id="q1text"></div>
+    <div class="subline" id="q1sub"></div>
+    <div id="q1info"></div>
+  </div>
+  <div id="overlay"><div class="clearCard">
+    <div class="ok-big">✓</div><div style="font-size:19px;margin-top:6px">ยอดเยี่ยม! สมการกรด-เบสถูกต้อง</div>
+    <div class="eq chem" id="clearEq"></div>
+    <div class="teach" id="clearTeach"></div>
+    <div class="btnrow"><button class="primary" id="btnNextRandom">สุ่มโจทย์ข้อถัดไป →</button></div>
+  </div></div>
+</section>
+
+<div id="toast"></div>
+
+<script>
+const EL={H:1,He:2,Li:3,Be:4,B:5,C:6,N:7,O:8,F:9,Ne:10,Na:11,Mg:12,Al:13,Si:14,P:15,S:16,Cl:17,Ar:18,K:19,Ca:20};
+const Z2={};for(const k in EL)Z2[EL[k]]=k;
+const CLS={SA:'กรดแก่',WA:'กรดอ่อน',SB:'เบสแก่',WB:'เบสอ่อน',SALT:'เกลือ',SOLV:'ตัวทำละลาย',ION:'ไอออน'};
+const DB={
+ HCl:{n:'กรดไฮโดรคลอริก',M:36.46,c:'SA',note:'กรดแก่แตกตัวสมบูรณ์ 100%'},
+ NaOH:{n:'โซเดียมไฮดรอกไซด์',M:40.00,c:'SB',note:'เบสแก่แตกตัวสมบูรณ์ 100%'},
+ NaCl:{n:'โซเดียมคลอไรด์',M:58.44,c:'SALT',note:'เกลือกลาง'},
+ H2O:{n:'น้ำ',M:18.02,c:'SOLV',note:'Kw = 1.0 × 10⁻¹⁴'},
+ H2SO4:{n:'กรดซัลฟิวริก',M:98.08,c:'SA',note:'กรดแก่ 2 โปรตอน'},
+ Na2SO4:{n:'โซเดียมซัลเฟต',M:142.04,c:'SALT',note:'เกลือกลาง'},
+ 'Ca(OH)2':{n:'แคลเซียมไฮดรอกไซด์',M:74.09,c:'SB',note:'เบสแก่ 2 ไฮดรอกไซด์'},
+ CaCl2:{n:'แคลเซียมคลอไรด์',M:110.98,c:'SALT',note:'เกลือกลาง'},
+ CH3COOH:{n:'กรดแอซิติก',M:60.05,c:'WA',note:'กรดอ่อนในน้ำส้มสายชู'},
+ CH3COONa:{n:'โซเดียมอะซิเตต',M:82.03,c:'SALT',note:'เกลือเบส'},
+ NH3:{n:'แอมโมเนีย',M:17.03,c:'WB',note:'เบสอ่อน'},
+ NH4Cl:{n:'แอมโมเนียมคลอไรด์',M:53.49,c:'SALT',note:'เกลือกรด'},
+ HF:{n:'กรดไฮโดรฟลูออริก',M:20.01,c:'WA',note:'กรดอ่อน'},
+ KF:{n:'โพแทสเซียมฟลูออไรด์',M:58.10,c:'SALT',note:'เกลือเบส'},
+ H3PO4:{n:'กรดฟอสฟอริก',M:97.99,c:'WA',note:'กรดอ่อน 3 โปรตอน'},
+ H:{n:'ไฮโดรเจนไอออน',M:1.01,c:'ION',note:'H⁺'},
+ F:{n:'ฟลูออไรด์ไอออน',M:19.00,c:'ION',note:'F⁻'},
+ OH:{n:'ไฮดรอกไซด์ไอออน',M:17.00,c:'ION',note:'OH⁻'},
+ NH4:{n:'แอมโมเนียมไอออน',M:18.04,c:'ION',note:'NH₄⁺'}
+};
+const sp=(c,f,s,q)=>({c,f,s,q:q||0});
+
+/* คลังเฉพาะโจทย์กรด-เบสล้วน ๆ หลากหลายรูปแบบ */
+const ACID_BASE_POOL=[
+{tag:'สะเทินกรดแก่ + เบสแก่ (1:1)',arrow:'→',
+ q:'สารละลายกรดไฮโดรคลอริกทำปฏิกิริยากับสารละลายโซเดียมไฮดรอกไซด์ จงเขียนสมการสะเทิน',
+ tray:['H','Cl','Na','O'],L:[sp(1,'HCl','aq'),sp(1,'NaOH','aq')],R:[sp(1,'NaCl','aq'),sp(1,'H2O','l')],
+ h1:'H⁺ จากกรดรวมกับ OH⁻ จากเบสได้น้ำ', h2:'HCl(aq) + NaOH(aq) → NaCl(aq) + H₂O(l)', teach:'ปฏิกิริยาสะเทินมาตรฐานระหว่างกรดแก่และเบสแก่'},
+{tag:'กรดแก่ 2 โปรตอน + เบสแก่',arrow:'→',
+ q:'สารละลายกรดซัลฟิวริกทำปฏิกิริยากับสารละลายโซเดียมไฮดรอกไซด์ จงเขียนสมการที่ดุลแล้ว',
+ tray:['H','S','O','Na'],L:[sp(1,'H2SO4','aq'),sp(2,'NaOH','aq')],R:[sp(1,'Na2SO4','aq'),sp(2,'H2O','l')],
+ h1:'H₂SO₄ ให้ H⁺ 2 ตัว ต้องใช้ NaOH 2 โมล', h2:'H₂SO₄(aq) + 2NaOH(aq) → Na₂SO₄(aq) + 2H₂O(l)', teach:'สัมประสิทธิ์หน้า NaOH ต้องเป็น 2 เพื่อสะเทินพอดี'},
+{tag:'กรดแก่ + เบสแก่มี่วงเล็บ (Ca(OH)₂)',arrow:'→',
+ q:'สารละลายกรดไฮโดรคลอริกทำปฏิกิริยากับสารละลายแคลเซียมไฮดรอกไซด์',
+ tray:['H','Cl','Ca','O'],L:[sp(2,'HCl','aq'),sp(1,'Ca(OH)2','aq')],R:[sp(1,'CaCl2','aq'),sp(2,'H2O','l')],
+ h1:'Ca(OH)₂ มี OH⁻ 2 หมู่ ต้องใช้ HCl 2 โมล', h2:'2HCl(aq) + Ca(OH)₂(aq) → CaCl₂(aq) + 2H₂O(l)', teach:'การดุลสมการเมื่อเบสมีวงเล็บ OH⁻ สองหมู่'},
+{tag:'กรดอ่อน + เบสแก่',arrow:'→',
+ q:'สารละลายกรดแอซิติกทำปฏิกิริยากับสารละลายโซเดียมไฮดรอกไซด์',
+ tray:['C','H','O','Na'],L:[sp(1,'CH3COOH','aq'),sp(1,'NaOH','aq')],R:[sp(1,'CH3COONa','aq'),sp(1,'H2O','l')],
+ h1:'กรดอ่อนเขียนในรูปโมเลกุลทำปฏิกิริยากับเบสแก่', h2:'CH₃COOH(aq) + NaOH(aq) → CH₃COONa(aq) + H₂O(l)', teach:'กรดอ่อนสะเทินกับเบสแก่ได้เกลือเบสและน้ำ'},
+{tag:'กรดแก่ + เบสอ่อน (NH₃)',arrow:'→',
+ q:'สารละลายกรดไฮโดรคลอริกทำปฏิกิริยากับสารละลายแอมโมเนีย',
+ tray:['H','Cl','N'],L:[sp(1,'HCl','aq'),sp(1,'NH3','aq')],R:[sp(1,'NH4Cl','aq')],
+ h1:'กรดแก่รวมกับเบสอ่อนได้เกลือแอมโมเนียมคลอไรด์', h2:'HCl(aq) + NH₃(aq) → NH₄Cl(aq)', teach:'ปฏิกิริยาระหว่างกรดแก่กับเบสอ่อนได้เกลือกรด'},
+{tag:'กรดอ่อน + เบสอ่อน',arrow:'→',
+ q:'สารละลายกรดฟลูออริกทำปฏิกิริยากับสารละลายแอมโมเนีย',
+ tray:['H','F','N'],L:[sp(1,'HF','aq'),sp(1,'NH3','aq')],R:[sp(1,'NH4F','aq')],
+ h1:'กรดอ่อน HF รวมกับเบสอ่อน NH₃ ได้เกลือ NH₄F', h2:'HF(aq) + NH₃(aq) → NH₄F(aq)', teach:'การรวมตัวของกรดอ่อนและเบสอ่อนในน้ำ'},
+{tag:'สมดุลการแตกตัวของกรดอ่อน (HF)',arrow:'⇌',
+ q:'กรดไฮโดรฟลูออริกแตกตัวในน้ำอย่างผันกลับได้ ให้ไฮโดรเจนไอออนและฟลูออไรด์ไอออน',
+ tray:['H','F'],L:[sp(1,'HF','aq')],R:[sp(1,'H','aq',1),sp(1,'F','aq',-1)],
+ h1:'ใช้ลูกศร ⇌ และใช้ปุ่มประจุ p⁺/e⁻ ทำ H⁺ และ F⁻', h2:'HF(aq) ⇌ H⁺(aq) + F⁻(aq)', teach:'กรดอ่อนแตกตัวไม่สมบูรณ์ เกิดภาวะสมดุล'},
+{tag:'สมดุลการแตกตัวของแอมโมเนีย (NH₃)',arrow:'⇌',
+ q:'แอมโมเนียทำปฏิกิริยากับน้ำเกิดสมดุลให้แอมโมเนียมไอออนและไฮดรอกไซด์ไอออน',
+ tray:['N','H','O'],L:[sp(1,'NH3','aq'),sp(1,'H2O','l')],R:[sp(1,'NH4','aq',1),sp(1,'OH','aq',-1)],
+ h1:'NH₃ + H₂O ⇌ NH₄⁺ + OH⁻', h2:'NH₃(aq) + H₂O(l) ⇌ NH₄⁺(aq) + OH⁻(aq)', teach:'เบสอ่อนรับโปรตอนจากน้ำให้ OH⁻'},
+{tag:'กรดอ่อน 3 โปรตอน (H₃PO₄)',arrow:'→',
+ q:'สารละลายกรดฟอสฟอริกทำปฏิกิริยากับโซเดียมไฮดรอกไซด์แบบสะเทินสมบูรณ์',
+ tray:['H','P','O','Na'],L:[sp(1,'H3PO4','aq'),sp(3,'NaOH','aq')],R:[sp(1,'Na3PO4','aq'),sp(3,'H2O','l')],
+ h1:'H₃PO₄ มี 3 โปรตอน ต้องใช้ NaOH 3 โมล', h2:'H₃PO₄(aq) + 3NaOH(aq) → Na₃PO₄(aq) + 3H₂O(l)', teach:'กรดหลายโปรตอนต้องใช้เบสตามสัดส่วน H⁺ ทั้งหมด'}
+];
+
+const $=q=>document.querySelector(q),$$=q=>[...document.querySelectorAll(q)];
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const gcd=(a,b)=>b?gcd(b,a%b):a;
+function subT(f){return f.replace(/(\d+)/g,'<sub>$1</sub>');}
+function chgT(q){return q?`<sup>${Math.abs(q)>1?Math.abs(q):''}${q>0?'+':'−'}</sup>`:'';}
+function spT(x){return `${x.c>1?x.c:''}${subT(x.f)}${chgT(x.q)}<span style="color:var(--dim)">(${x.s})</span>`;}
+function eqT(e){return e.L.map(spT).join(' + ')+` ${e.arrow} `+e.R.map(spT).join(' + ');}
+function show(id){$$('.screen').forEach(s=>s.classList.remove('on'));$('#'+id).classList.add('on');}
+let tT;function toast(m){const t=$('#toast');t.innerHTML=m;t.classList.add('on');clearTimeout(tT);tT=setTimeout(()=>t.classList.remove('on'),2100);}
+function countAtoms(f,mult){mult=mult||1;let i=0;
+  function walk(){const loc={};
+    while(i<f.length){const ch=f[i];
+      if(ch==='('){i++;const inner=walk();let d='';while(/\d/.test(f[i]))d+=f[i++];const m=d?+d:1;
+        for(const k in inner)loc[k]=(loc[k]||0)+inner[k]*m;}
+      else if(ch===')'){i++;return loc;}
+      else{const m=f.slice(i).match(/^([A-Z][a-z]?)(\d*)/);if(!m){i++;continue;}i+=m[0].length;
+        loc[m[1]]=(loc[m[1]]||0)+(m[2]?+m[2]:1);}}
+    return loc;}
+  const r=walk(),o={};for(const k in r)o[k]=r[k]*mult;return o;}
+
+const P1={current:null,chunks:[],state:'aq',ionMode:1,sel:null,hint:0};
+function S(){return P1.current;}
+function tokensOf(f){const out=[];let i=0;
+  while(i<f.length){const ch=f[i];
+    if(ch==='('){out.push({k:'('});i++;}
+    else if(ch===')'){i++;let d='';while(/\d/.test(f[i]))d+=f[i++];out.push({k:')',sub:d?+d:1});}
+    else{const m=f.slice(i).match(/^([A-Z][a-z]?)(\d*)/);i+=m[0].length;
+      out.push({k:'a',z0:EL[m[1]],dP:0,dE:0,sub:m[2]?+m[2]:1});}}
+  return out;}
+function mkChunk(x){return{t:'sp',coeff:x.c,state:x.s,tk:tokensOf(x.f),open:false};}
+function fOf(c){return c.tk.map(t=>t.k==='a'?(Z2[t.z0+t.dP]||'?')+(t.sub>1?t.sub:''):t.k==='('?'(':')'+(t.sub>1?t.sub:'')).join('');}
+function qOf(c){let p=0,e=0;c.tk.forEach(t=>{if(t.k==='a'){p+=t.dP*t.sub;e+=t.dE*t.sub;}});return{p,e:-e,net:p-e};}
+function openChunk(){const l=P1.chunks[P1.chunks.length-1];return(l&&l.t==='sp'&&l.open)?l:null;}
+
+function renderBuild(){
+  let h='';
+  P1.chunks.forEach((c,i)=>{
+    if(c.t==='op'){h+=`<div class="chunk op" data-i="${i}">${c.v}</div>`;return;}
+    const q=qOf(c);let sup='';
+    if(q.p)sup+=`<span class="chg-p">${Math.abs(q.p)>1?Math.abs(q.p):''}${q.p>0?'+':'−'}</span>`;
+    if(q.e)sup+=`<span class="chg-e">${Math.abs(q.e)>1?Math.abs(q.e):''}${q.e>0?'+':'−'}</span>`;
+    const body=c.tk.map((t,j)=>{
+      if(t.k!=='a')return t.k==='('?'(':')'+(t.sub>1?`<sub>${t.sub}</sub>`:'');
+      const s=(P1.sel&&P1.sel.c===i&&P1.sel.a===j)?' sel':'';
+      return `<span class="atom${s}" data-i="${i}" data-a="${j}">${Z2[t.z0+t.dP]||'?'}${t.sub>1?`<sub>${t.sub}</sub>`:''}</span>`;}).join('');
+    const selC=(P1.sel&&P1.sel.c===i&&P1.sel.a==null)?' sel':'';
+    h+=`<div class="chunk chem${c.open?' open':''}${selC}" data-i="${i}">${c.coeff>1?c.coeff:''}${body}${sup?`<sup>${sup}</sup>`:''}<span class="st">(${c.state})</span><span class="x" data-del="${i}">×</span></div>`;
+  });
+  h+='<span class="caret"></span>';
+  $('#buildArea').innerHTML=h;
+  $('#selInfo').textContent=P1.sel?(P1.sel.a!=null?'เลือกอะตอม · กดเลข = ห้อย · วาง p⁺/e⁻ ได้':'เลือกสาร · กดเลข = สัมประสิทธิ์'):'';
+}
+
+function placeEl(s){P1.sel=null;let c=openChunk();
+  if(!c){c={t:'sp',coeff:1,state:P1.state,tk:[],open:true};P1.chunks.push(c);}
+  c.tk.push({k:'a',z0:EL[s],dP:0,dE:0,sub:1});renderBuild();}
+function placeGrp(v){let c=openChunk();
+  if(!c){c={t:'sp',coeff:1,state:P1.state,tk:[],open:true};P1.chunks.push(c);}
+  if(v===')'&&!c.tk.some(t=>t.k==='(')){toast('ยังไม่ได้เปิดวงเล็บ');return;}
+  c.tk.push(v==='('?{k:'('}:{k:')',sub:1});renderBuild();}
+function placeNum(n){
+  if(P1.sel){const c=P1.chunks[P1.sel.c];
+    if(P1.sel.a!=null){const t=c.tk[P1.sel.a];t.sub=(t.sub>1?t.sub*10:0)+n||1;}
+    else c.coeff=(c.coeff>1?c.coeff*10:0)+n||1;
+    renderBuild();return;}
+  const c=openChunk();
+  if(!c||!c.tk.length){const t=c||{t:'sp',coeff:1,state:P1.state,tk:[],open:true};
+    if(!c)P1.chunks.push(t);t.coeff=(t.coeff>1?t.coeff*10:0)+n||1;renderBuild();return;}
+  const last=c.tk[c.tk.length-1];
+  if(last.k==='(')toast('ใส่ธาตุก่อนปิดวงเล็บ');
+  else{last.sub=(last.sub>1?last.sub*10:0)+n||1;}
+  renderBuild();}
+function closeOpen(){const c=openChunk();if(c){if(!c.tk.length)P1.chunks.pop();else c.open=false;}}
+function placeOp(v){P1.sel=null;closeOpen();
+  const l=P1.chunks[P1.chunks.length-1];
+  if(l&&l.t==='op'&&((v==='←'&&l.v==='→')||(v==='→'&&l.v==='←'))){l.v='⇌';toast('→ + ← = ⇌ สมดุล');renderBuild();return;}
+  if(l&&l.t==='op'){l.v=v;renderBuild();return;}
+  if(!P1.chunks.length){toast('ยังไม่มีสาร');return;}
+  P1.chunks.push({t:'op',v});renderBuild();}
+function placeIon(kind){
+  if(!P1.sel||P1.sel.a==null){toast('คลิกเลือก<b>อะตอม</b>ก่อนวางประจุ');return;}
+  const t=P1.chunks[P1.sel.c].tk[P1.sel.a];
+  if(kind==='p'){const z=t.z0+t.dP+P1.ionMode;if(!Z2[z])return;t.dP+=P1.ionMode;toast(`เปลี่ยนธาตุเป็น ${Z2[z]}`);}
+  else{t.dE+=P1.ionMode;toast('ปรับประจุอิเล็กตรอน');}
+  renderBuild();}
+function delChunk(i){if(P1.chunks[i]){P1.chunks.splice(i,1);P1.sel=null;renderBuild();}}
+function backspace(){P1.sel=null;const c=openChunk();if(c&&c.tk.length){c.tk.pop();if(!c.tk.length)P1.chunks.pop();}else P1.chunks.pop();renderBuild();}
+
+function applyPiece(p){
+  if(p.kind==='el')placeEl(p.v);
+  else if(p.kind==='num')placeNum(p.v);
+  else if(p.kind==='op')placeOp(p.v);
+  else if(p.kind==='grp')placeGrp(p.v);
+  else if(p.kind==='ion')placeIon(p.v);
+}
+
+function buildTrays(){
+  $('#trayEl').innerHTML=S().tray.map(s=>`<div class="piece chem" data-k="el" data-v="${s}">${s}</div>`).join('');
+  $('#trayNum').innerHTML=[0,1,2,3,4,5,6,7,8,9].map(n=>`<div class="piece num" data-k="num" data-v="${n}">${n}</div>`).join('');
+  $('#trayOp').innerHTML=['+','→','←'].map(o=>`<div class="piece op" data-k="op" data-v="${o}">${o}</div>`).join('')
+    +['(',')'].map(o=>`<div class="piece grp" data-k="grp" data-v="${o}">${o}</div>`).join('');
+  $('#trayIon').innerHTML=`<div class="piece ion" data-k="ion" data-v="p">p⁺</div><div class="piece ion e" data-k="ion" data-v="e">e⁻</div>`;
+  $('#segState').innerHTML=['g','s','l','aq'].map(s=>`<button data-st="${s}" class="${s===P1.state?'on':''}">(${s})</button>`).join('');
+  $('#segIon').innerHTML=`<button data-im="1" class="${P1.ionMode>0?'on':''}">+1</button><button data-im="-1" class="${P1.ionMode<0?'on':''}">-1</button>`;
+
+  $$('.piece').forEach(p=>{p.onclick=()=>applyPiece({kind:p.dataset.k,v:p.dataset.k==='num'?+p.dataset.v:p.dataset.v});});
+}
+
+$('#segState').onclick=e=>{const b=e.target.closest('button');if(!b)return;P1.state=b.dataset.st;
+  $$('#segState button').forEach(x=>x.classList.toggle('on',x===b));
+  const c=P1.sel?P1.chunks[P1.sel.c]:openChunk();if(c&&c.t==='sp')c.state=P1.state;renderBuild();};
+$('#segIon').onclick=e=>{const b=e.target.closest('button');if(!b)return;P1.ionMode=+b.dataset.im;
+  $$('#segIon button').forEach(x=>x.classList.toggle('on',x===b));};
+
+$('#buildArea').onclick=e=>{
+  const x=e.target.closest('[data-del]');if(x){delChunk(+x.dataset.del);return;}
+  const a=e.target.closest('.atom');
+  if(a){P1.sel={c:+a.dataset.i,a:+a.dataset.a};renderBuild();return;}
+  const c=e.target.closest('.chunk');
+  if(c&&c.dataset.i!=null&&P1.chunks[+c.dataset.i].t==='sp'){
+    const i=+c.dataset.i;P1.sel=(P1.sel&&P1.sel.c===i&&P1.sel.a==null)?null:{c:i,a:null};renderBuild();}
+};
+
+function readEq(){closeOpen();renderBuild();
+  const i=P1.chunks.findIndex(c=>c.t==='op'&&['→','←','⇌'].includes(c.v));
+  if(i<0)return{err:'ยังไม่มีลูกศรปฏิกิริยา'};
+  const L=[],R=[];let cur=L;
+  P1.chunks.forEach((c,j)=>{if(j===i){cur=R;return;}if(c.t==='op')return;
+    cur.push({c:c.coeff,f:fOf(c),s:c.state,q:qOf(c).net});});
+  if(!L.length||!R.length)return{err:'สมการต้องมีสารสองฝั่ง'};
+  return{L,R,arrow:P1.chunks[i].v};}
+
+const key=x=>`${x.f}|${x.s}|${x.q}`;
+const same=(a,b)=>a.length===b.length&&a.map(key).sort().join('#')===b.map(key).sort().join('#');
+function sumAtoms(side){const o={};side.forEach(x=>{const a=countAtoms(x.f,x.c);for(const k in a)o[k]=(o[k]||0)+a[k];});return o;}
+
+function check(){
+  const st=S(),r=readEq(),fb=$('#fb');fb.className='feedback no';
+  if(r.err){fb.textContent=r.err;return;}
+  if(r.arrow!==st.arrow){fb.textContent='ชนิดลูกศรไม่ถูกต้อง';return;}
+  if(!same(r.L,st.L)){fb.textContent='สารตั้งต้นไม่ตรงโจทย์';return;}
+  if(!same(r.R,st.R)){fb.textContent='ผลิตภัณฑ์หรือประจุ/สถานะยังไม่ถูกต้อง';return;}
+  const cl=sumAtoms(r.L),cr=sumAtoms(r.R);
+  for(const k in cl)if(cl[k]!==cr[k]){fb.textContent=`อะตอม ${k} สองฝั่งยังไม่เท่ากัน`;return;}
+  fb.className='feedback ok';fb.textContent='สมการถูกต้อง!';
+  setTimeout(()=>stageClear(r),400);}
+
+function stageClear(r){
+  const st=S();
+  $('#clearEq').innerHTML=eqT(r);$('#clearTeach').innerHTML='<b>สรุปสาระสำคัญ:</b><br>'+st.teach;
+  $('#overlay').classList.add('on');
+}
+
+function fillSheet(idT,idS,idI,text,list){
+  $(idT).textContent=text;
+  $(idS).innerHTML=list.map(x=>`<div class="subcard"><span class="chem">${spT({...x,c:1})}</span><button class="ibtn" data-f="${x.f}">i</button></div>`).join('');
+  $(idS).onclick=e=>{const b=e.target.closest('[data-f]');if(!b)return;const f=b.dataset.f,d=DB[f],slot=$(idI);
+    if(slot.dataset.cur===f){slot.innerHTML='';slot.dataset.cur='';return;}slot.dataset.cur=f;
+    slot.innerHTML=`<div class="infoPanel"><table><tr><td>สูตร</td><td class="chem">${subT(f)}</td></tr><tr><td>ชื่อ</td><td>${d.n}</td></tr><tr><td>ชนิด</td><td>${CLS[d.c]}</td></tr><tr><td>หมายเหตุ</td><td>${d.note}</td></tr></table></div>`;};}
+
+$('#grab1').onclick=()=>$('#sheet1').classList.toggle('open');
+$('#head1').onclick=()=>$('#sheet1').classList.toggle('open');
+
+function loadRandomStage(){
+  const randItem = pick(ACID_BASE_POOL);
+  P1.current = randItem;
+  P1.sel=null; P1.hint=0; P1.state=randItem.L[0].s;
+  P1.chunks=[]; 
+  playInitialAnimation(randItem);
+}
+
+function playInitialAnimation(item){
+  const w=$('#introWrap');
+  const eqStr = item.L.map(spT).join(' + ');
+  w.innerHTML=`<div class="introCard chem" id="icMain"><b>${eqStr}</b></div>`;
+  w.style.display='flex'; w.style.opacity='1';
+  
+  setTimeout(()=>{
+    const mainCard = $('#icMain');
+    if(mainCard) mainCard.style.transform = 'scale(1.15)';
+  }, 300);
+
+  setTimeout(()=>{
+    w.style.opacity='0';
+    setTimeout(()=>{
+      w.style.display='none';
+      item.L.forEach((x,j)=>{if(j)P1.chunks.push({t:'op',v:'+'});P1.chunks.push(mkChunk(x));});
+      $('#stageTag').textContent=`Acid-Base Mode · ${item.tag}`;
+      $('#fb').textContent=''; $('#p1hint').innerHTML=''; $('#btnP1Hint').textContent='เปิด hint'; $('#btnP1Hint').disabled=false;
+      $('#q1info').innerHTML=''; $('#overlay').classList.remove('on');
+      buildTrays(); renderBuild();
+      fillSheet('#q1text','#q1sub','#q1info',item.q,item.L);
+      show('screen-p1');
+    }, 400);
+  }, 1300);
+}
+
+$('#btnRandomNew').onclick = loadRandomStage;
+$('#btnNextRandom').onclick = loadRandomStage;
+$('#btnCheck').onclick = check;
+$('#btnBack').onclick = backspace;
+$('#btnReset').onclick = () => {
+  P1.sel=null; P1.hint=0; P1.chunks=[];
+  S().L.forEach((x,j)=>{if(j)P1.chunks.push({t:'op',v:'+'});P1.chunks.push(mkChunk(x));});
+  renderBuild(); $('#fb').textContent='';
+};
+$('#btnP1Hint').onclick = ()=>{
+  P1.hint++; const s=S();
+  $('#p1hint').innerHTML = P1.hint===1 ? `<div class="hintbox">${s.h1}</div>` : `<div class="hintbox">${s.h1}</div><div class="hintbox" style="border-left-color:var(--acc)">${s.h2}</div>`;
+  if(P1.hint>1)$('#btnP1Hint').disabled=true;
+};
+
+loadRandomStage();
+</script>
+</body>
+</html>
